@@ -22,7 +22,11 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:3000", "http://localhost:5173"],
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "https://codertc.nadeemashraf.dev",
+    ],
     credentials: true,
   })
 );
@@ -40,7 +44,11 @@ app.use("/api/v1/auth/user", usesRouter);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:5173"],
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "https://codertc.nadeemashraf.dev",
+    ],
   },
 });
 
