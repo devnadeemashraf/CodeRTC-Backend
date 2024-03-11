@@ -7,10 +7,10 @@ const authMiddleware = async (
   response: Response,
   next: NextFunction
 ) => {
-  const { accessToken } = request.cookies;
+  const { access_token_crtc } = request.cookies;
 
   // Authenticate Cookie
-  const isAuthenticated = await verifyToken(accessToken, "access_token");
+  const isAuthenticated = await verifyToken(access_token_crtc, "access_token");
 
   // Return Unauthorized if not valid cookie
   if (!isAuthenticated) {
@@ -20,12 +20,12 @@ const authMiddleware = async (
   }
 
   // Decode User from Cookie
-  const signedInUser = await decodeToken(accessToken);
+  const signedInUser = await decodeToken(access_token_crtc);
 
   // If No User Info, Return Not Signed In
   if (!signedInUser) {
     return response.status(404).json({
-      message: "Not Signed In",
+      message: "Cannot Find User, Sign In Again.",
     });
   }
 

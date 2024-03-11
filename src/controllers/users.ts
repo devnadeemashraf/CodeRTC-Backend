@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import { v4 as uuidV4 } from "uuid";
+import bcrypt from "bcrypt";
 
 import { prisma } from "../prisma";
 
-import { compareHashedPassword, hashPassword } from "../utils/bcrypt";
 import { generateToken } from "../utils/tokens";
 
 class UsersController {
@@ -11,26 +11,28 @@ class UsersController {
     const { name, username, password } = request.body;
 
     if (!username || !name || !password) {
-      return response.status(400).json({
-        message: "One or more fields are missing",
+      return response.status(401).json({
+        status: "ERR",
+        message: "One or more fields are missing.",
       });
     }
 
-    const userFromDB = await prisma.user.findFirst({
+    const userFoundInDB = await prisma.user.findFirst({
       where: {
         username,
       },
     });
 
-    if (userFromDB) {
+    if (userFoundInDB) {
       return response.status(400).json({
-        message: "Username Already Exists",
+        status: "ERR",
+        message: "This Username is already taken",
       });
     }
 
     // Hash Password
     const userId = uuidV4();
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const newUser = await prisma.user.create({
       data: {
@@ -51,12 +53,12 @@ class UsersController {
     );
 
     // Create New Cookie
-    response.cookie("accessToken", accessToken);
-    response.status(200);
+    response.cookie("access_token_crtc", accessToken);
 
     // Return User
-    return response.json({
-      message: "Registration Successfull ",
+    return response.status(200).json({
+      status: "OK",
+      message: "Registration Success.",
       user: newUser,
     });
   }
@@ -70,47 +72,76 @@ class UsersController {
       });
     }
 
-    const userFromDB = await prisma.user.findFirst({
+    const userFoundInDB = await prisma.user.findFirst({
       where: {
         username,
       },
     });
 
-    if (!userFromDB) {
-      return response.status(400).json({
-        message: "Invalid Username or Password",
+    if (!userFoundInDB) {
+      return response.status(404).json({
+        status: "ERR",
+        message: "Cannot find user with this username.",
       });
     }
 
-    const hashedPassword = userFromDB?.password;
-    const passwordMatches = await compareHashedPassword(
-      password,
-      hashedPassword
-    );
+    const hashedPassword = userFoundInDB?.password;
+    const passwordMatches = await bcrypt.compare(password, hashedPassword);
 
     if (!passwordMatches) {
       return response.status(400).json({
-        message: "Invalid Username or Password",
+        status: "ERR",
+        message: "Invalid Username or Password.",
       });
     }
 
     // Create New Token
     const accessToken = await generateToken(
       {
-        id: userFromDB.id,
-        username: userFromDB.username,
+        id: userFoundInDB.id,
+        username: userFoundInDB.username,
       },
       "access_token"
     );
 
     // Create New Cookie
-    response.cookie("accessToken", accessToken);
-    response.status(200);
+    response.cookie("access_token_crtc", accessToken);
 
     // Return User
-    return response.json({
-      message: "Logged In",
-      user: userFromDB,
+    return response.status(200).json({
+      status: "OK",
+      message: "Log In Success",
+      user: userFoundInDB,
+    });
+  }
+
+  async getUserInfo(request: Request, response: Response) {
+    const { userId } = request.params;
+
+    if (!userId) {
+      return response.status(400).json({
+        message: "Invalid Params",
+      });
+    }
+
+    const userFoundInDB = await prisma.user.findFirst({
+      where: {
+        id: userId,
+      },
+    });
+
+    if (!userFoundInDB) {
+      return response.status(404).json({
+        status: "ERR",
+        message: "Cannot find user.",
+      });
+    }
+
+    // Return User
+    return response.status(200).json({
+      status: "OK",
+      message: "User Found",
+      user: userFoundInDB,
     });
   }
 
@@ -123,9 +154,10 @@ class UsersController {
       },
     });
 
-    response.clearCookie("accessToken");
+    response.clearCookie("access_token_crtc");
 
     return response.status(200).json({
+      status: "OK",
       message: `UserID : ${user.id} and its corresponding relations have been entirely deleted.`,
     });
   }
@@ -135,9 +167,10 @@ class UsersController {
 
     // Remove Session from DB
 
-    response.clearCookie("accessToken");
+    response.clearCookie("access_token_crtc");
 
     return response.status(200).json({
+      status: "OK",
       message: `UserID : ${user.id} Logged Out Successfully.`,
     });
   }
@@ -146,8 +179,9 @@ class UsersController {
     const user = request.user;
 
     return response.status(200).json({
+      status: "OK",
       message: "Authorized",
-      user,
+      user: user,
     });
   }
 }

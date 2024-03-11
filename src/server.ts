@@ -19,12 +19,13 @@ const redis = new Redis(REDIS_URI);
 
 const app = express();
 
+app.use(express.json());
 app.use(
   cors({
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "http://localhost:5173"],
+    credentials: true,
   })
 );
-app.use(express.json());
 app.use(cookieParser());
 
 const httpServer = createServer(app);
@@ -39,7 +40,7 @@ app.use("/api/v1/auth/user", usesRouter);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "http://localhost:5173"],
   },
 });
 

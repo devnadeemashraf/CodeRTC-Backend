@@ -8,6 +8,8 @@ const usesRouter = Router();
 usesRouter.post("/register", UsersController.registerNewUser);
 usesRouter.post("/login", UsersController.loginUser);
 
+usesRouter.get("/info/:userId", UsersController.getUserInfo);
+
 usesRouter.post("/logout", authMiddleware, UsersController.logoutUser);
 usesRouter.delete("/delete", authMiddleware, UsersController.deleteUser);
 usesRouter.get(
