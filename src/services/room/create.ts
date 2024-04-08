@@ -5,7 +5,7 @@ import { IServerResponseWithCode } from "../../interface/services";
 import { TokenPayload } from "../../types/frameworks";
 import BcryptDriver from "../../frameworks/bcryptDriver";
 import { ALL_FIELDS_IN_RESPONSE } from "../room/constants";
-import { totalUniqueSlugs } from "random-word-slugs";
+import { generateSlug } from "random-word-slugs";
 
 interface ICreateRoomParams {
   topic: string;
@@ -56,7 +56,7 @@ class CreateRoomService {
         passcodeHash = await BcryptDriver.hash(passcode);
       }
 
-      const randomSlug = String(totalUniqueSlugs() + Date.now());
+      const randomSlug = String(generateSlug() + "-" + Date.now());
 
       // Can check in future if the title contains some bad word here
       const createdRoomInDatabase = await this.prisma.room.create({
