@@ -32,8 +32,12 @@ class ExpressApp {
     this.app.use(cookieParser());
 
     // Rate Limiter
-    // 10 Requests per minute
-    const limiter = new ExpressRateLimit(1 * 60 * 1000, 20).getRequestHandler();
+    // All Routes
+    const limit = process.env.NODE_ENV == "development" ? 50 : 10;
+    const limiter = new ExpressRateLimit(
+      1 * 60 * 1000,
+      limit
+    ).getRequestHandler();
 
     this.app.use(limiter);
   }
