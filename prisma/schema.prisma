@@ -10,48 +10,95 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("SUPABASE_DATABASE_URL")
-  directUrl = env("SUPABASE_DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
-  id       String @id @unique
-  username String @unique @default("")
-  name     String @default("")
-  password String @default("")
+  id           String @id @unique
+  name         String @default("")
+  username     String @unique @default("")
+  profileImage String @default("/default.png")
+  passwordHash String
+
+  // email String? @unique @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  rooms    Room[]
+  session Session?
+
+  createdRooms Room[] @relation("UserCreatedRooms")
+  joinedRooms  Room[] @relation("UserJoinedRooms")
+
   messages Message[]
+
+  lastJoinedRoom String?
+
+  @@map("users")
+}
+
+model Session {
+  id String @id @unique @default(uuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accessToken  String
+  refreshToken String
+
+  @@map("sessions")
 }
 
 model Room {
-  id      String @id @unique @default("")
-  title   String @default("")
-  content String @default("")
+  id          String @id @unique @default("")
+  status      String @default("open")
+  topic       String @default("")
+  description String @default("")
+  codeContent String @default("// This is the begnning of your new playground! \nconsole.log('Hello, CodeRTC!');")
 
-  messages Message[]
+  isProtected Boolean @default(false)
+  passcode    String?
 
-  userId String
-  owner  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  language String @default("JavaScript")
+  tags     Tag[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  ownerId String
+  owner   User   @relation(name: "UserCreatedRooms", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  members  User[]    @relation("UserJoinedRooms")
+  messages Message[]
+
+  @@map("rooms")
 }
 
 model Message {
-  id      String @id @unique @default("")
+  id String @id @unique @default(uuid())
+
+  type    String @default("system")
   content String @default("")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String
-  author User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Tag {
+  id   String @id @unique @default(uuid())
+  text String
 
   roomId String
   room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("tags")
 }
