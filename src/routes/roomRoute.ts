@@ -35,11 +35,7 @@ roomRoute.patch(
   tryCatch(roomController.saveCodeChanges)
 );
 
-roomRoute.delete(
-  "/delete",
-  authenticateRequest,
-  tryCatch(roomController.delete)
-);
+roomRoute.post("/delete", authenticateRequest, tryCatch(roomController.delete));
 
 roomRoute.post(
   "/details",

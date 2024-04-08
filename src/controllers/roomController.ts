@@ -97,9 +97,11 @@ class RoomController implements IRoomController {
   }
 
   async delete(request: Request, response: Response) {
+    const { roomId } = request.body;
+
     const deleteRoomService = new DeleteRoomService(prismaDriver);
     const { code, status, message, data, error } = await deleteRoomService.exec(
-      "12"
+      roomId
     );
 
     if (status == "ERROR") {

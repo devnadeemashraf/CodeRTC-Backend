@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-import { HTTP_CODES } from "../../enum";
+import { HTTP_CODES, HTTP_RESPONSE } from "../../enum";
 import { IServerResponseWithCode } from "../../interface/services";
 
 class DeleteRoomService {
@@ -11,13 +11,27 @@ class DeleteRoomService {
   }
 
   exec(roomId: string): Promise<IServerResponseWithCode> {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
+      if (!roomId) {
+        return resolve({
+          code: HTTP_CODES.BAD_REQUEST,
+          error: HTTP_RESPONSE.BAD_REQUEST,
+          status: "ERROR",
+          message: "One or more fields are missing",
+        });
+      }
+
+      await this.prisma.room.delete({
+        where: {
+          id: roomId,
+        },
+      });
+
       resolve({
         code: HTTP_CODES.OK,
-        error: null!,
         data: null,
         status: "SUCCESS",
-        message: "Okay",
+        message: `Room - ${roomId} deleted successfully`,
       });
     });
   }
