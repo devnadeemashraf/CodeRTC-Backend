@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { Redis } from "ioredis";
 
 import { TRedisContent } from "../../types/frameworks";
